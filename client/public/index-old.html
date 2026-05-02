@@ -20,206 +20,139 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400;500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" />
 
+  <link rel="stylesheet" href="tailwind.css" />
+
+  <!-- Try multiple CDNs in case one is blocked -->
+  <script>
+    // CDN fallback loader
+    window.__loadScript = function(urls, onLoad, onError) {
+      let i = 0;
+      function tryNext() {
+        if (i >= urls.length) {
+          if (onError) onError();
+          return;
+        }
+        const s = document.createElement('script');
+        s.src = urls[i++];
+        s.async = false;
+        s.onload = function() { if (onLoad) onLoad(); };
+        s.onerror = function() {
+          console.warn('Failed to load:', s.src, '- trying next CDN');
+          tryNext();
+        };
+        document.head.appendChild(s);
+      }
+      tryNext();
+    };
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"
+          onerror="window.__loadScript(['https://unpkg.com/react@18.3.1/umd/react.production.min.js','https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js'])"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"
+          onerror="window.__loadScript(['https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js','https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js'])"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js"
+          onerror="window.__loadScript(['https://unpkg.com/prop-types@15.8.1/prop-types.min.js'])"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"
+          onerror="window.__loadScript(['https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js'])"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.378.0/dist/umd/lucide.min.js"
+          onerror="window.__loadScript(['https://unpkg.com/lucide@0.378.0/dist/umd/lucide.min.js'])"></script>
+
   <style>
-    * {
+    html, body {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #0F0B08 0%, #1A130D 100%);
-      color: #F4E8D0;
+      background: #0F0B08; color: #F4E8D0;
       font-family: 'Tajawal', system-ui, sans-serif;
       -webkit-tap-highlight-color: transparent;
       overscroll-behavior-y: contain;
-      overflow-x: hidden;
     }
-
     body {
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
     }
-
     #loading-screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #0F0B08 0%, #1A130D 100%);
-      z-index: 9999;
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #0F0B08; color: #F4E8D0; color: #2D1F14;
       transition: opacity 0.6s ease;
+      z-index: 9999;
     }
-
     #loading-screen.hide {
       opacity: 0;
       pointer-events: none;
     }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 32px;
-    }
-
-    .loading-dots {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-    }
-
     .loading-dot {
-      width: 12px;
-      height: 12px;
+      width: 10px; height: 10px;
       border-radius: 50%;
       background: #D4A24C;
       animation: pulse 1.4s ease-in-out infinite;
-      box-shadow: 0 0 8px rgba(212, 162, 76, 0.4);
     }
-
-    .loading-dot:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    .loading-dot:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes pulse {
-      0%, 60%, 100% {
-        opacity: 0.3;
-        transform: scale(0.8);
-      }
-      30% {
-        opacity: 1;
-        transform: scale(1.2);
-      }
+      0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+      30% { opacity: 1; transform: scale(1.2); }
     }
-
     .loading-text {
+      margin-top: 24px;
       font-family: 'Reem Kufi', serif;
-      font-weight: 600;
-      font-size: 28px;
-      letter-spacing: 0.08em;
-      color: #D4A24C;
-      text-shadow: 0 4px 12px rgba(212, 162, 76, 0.2);
-    }
-
-    .loading-sub {
-      font-size: 14px;
-      opacity: 0.6;
+      font-weight: 500;
+      font-size: 18px;
       letter-spacing: 0.05em;
     }
-
+    .loading-sub {
+      margin-top: 6px;
+      font-size: 12px;
+      opacity: 0.5;
+    }
     #error-screen {
       display: none;
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       padding: 24px;
-      background: linear-gradient(135deg, #0F0B08 0%, #1A130D 100%);
+      background: #0F0B08; color: #F4E8D0; color: #2D1F14;
       z-index: 10000;
       overflow-y: auto;
       font-family: 'Tajawal', sans-serif;
     }
-
-    #error-screen.show {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
+    #error-screen.show { display: block; }
     #error-screen h2 {
       font-family: 'Reem Kufi', serif;
       color: #D4A24C;
       margin-bottom: 16px;
-      font-size: 24px;
     }
-
     #error-screen pre {
-      background: rgba(212, 162, 76, 0.05);
+      background: #1F1610;
       color: #F4E8D0;
       padding: 16px;
       border-radius: 12px;
-      border: 1px solid rgba(212, 162, 76, 0.2);
       font-size: 11px;
       overflow-x: auto;
       direction: ltr;
       text-align: left;
-      max-width: 100%;
-    }
-
-    #error-screen button {
-      margin-top: 20px;
-      padding: 12px 32px;
-      background: linear-gradient(135deg, #D4A24C 0%, #B89149 100%);
-      color: #0F0B08;
-      border: none;
-      border-radius: 12px;
-      font-size: 14px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(212, 162, 76, 0.3);
-    }
-
-    #error-screen button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(212, 162, 76, 0.4);
-    }
-
-    #root {
-      width: 100%;
-      min-height: 100vh;
-    }
-
-    /* Scrollbar styling */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: rgba(212, 162, 76, 0.3);
-      border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(212, 162, 76, 0.5);
     }
   </style>
 </head>
 <body>
   <div id="loading-screen">
-    <div class="loading-container">
-      <div class="loading-dots">
-        <div class="loading-dot"></div>
-        <div class="loading-dot"></div>
-        <div class="loading-dot"></div>
-      </div>
-      <div class="loading-text">الرفيق</div>
-      <div class="loading-sub">جاري التحضير...</div>
+    <div style="display: flex; gap: 8px;">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
     </div>
+    <div class="loading-text">الرفيق</div>
+    <div class="loading-sub">جاري التحضير...</div>
   </div>
 
   <div id="root"></div>
 
   <div id="error-screen">
-    <div style="text-align: center; max-width: 500px;">
-      <h2>حدث خطأ</h2>
-      <p style="margin-bottom: 16px; opacity: 0.8;">إذا تكرر هذا الخطأ، أرسل لنا الرسالة التالية:</p>
-      <pre id="error-message"></pre>
-      <button onclick="location.reload()">إعادة التحميل</button>
-    </div>
+    <h2>حدث خطأ</h2>
+    <p style="margin-bottom: 16px;">إذا تكرر هذا الخطأ، أرسل لنا الرسالة التالية:</p>
+    <pre id="error-message"></pre>
+    <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #D4A24C; color: #0F0B08; border: none; border-radius: 12px; font-size: 14px; cursor: pointer;">إعادة التحميل</button>
   </div>
 
   <script>
@@ -231,7 +164,6 @@
         document.getElementById('error-message').textContent = msg;
       } catch(e) {}
     };
-
     window.addEventListener('error', function(e) {
       window.__showError('Error: ' + (e.message || 'unknown') + '\n' + (e.error && e.error.stack ? e.error.stack : ''));
     });
@@ -276,7 +208,6 @@
         setTimeout(function() { try { ls.remove(); } catch(e){} }, 700);
       }
     };
-
     var observer = new MutationObserver(function() {
       var root = document.getElementById('root');
       if (root && root.firstChild) {
@@ -284,49 +215,11 @@
         observer.disconnect();
       }
     });
-
     observer.observe(document.getElementById('root'), { childList: true, subtree: true });
     setTimeout(hideLoading, 10000);
   </script>
 
-  <!-- CDN fallback loader -->
-  <script>
-    window.__loadScript = function(urls, onLoad, onError) {
-      let i = 0;
-      function tryNext() {
-        if (i >= urls.length) {
-          if (onError) onError();
-          return;
-        }
-        const s = document.createElement('script');
-        s.src = urls[i++];
-        s.async = false;
-        s.onload = function() { if (onLoad) onLoad(); };
-        s.onerror = function() {
-          console.warn('Failed to load:', s.src, '- trying next CDN');
-          tryNext();
-        };
-        document.head.appendChild(s);
-      }
-      tryNext();
-    };
-  </script>
-
-  <!-- React and dependencies -->
-  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"
-          onerror="window.__loadScript(['https://unpkg.com/react@18.3.1/umd/react.production.min.js','https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js'])"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"
-          onerror="window.__loadScript(['https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js','https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js'])"></script>
-
-  <script src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js"
-          onerror="window.__loadScript(['https://unpkg.com/prop-types@15.8.1/prop-types.min.js'])"></script>
-  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"
-          onerror="window.__loadScript(['https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js'])"></script>
-
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.378.0/dist/umd/lucide.min.js"
-          onerror="window.__loadScript(['https://unpkg.com/lucide@0.378.0/dist/umd/lucide.min.js'])"></script>
-
-  <!-- Wait for dependencies and initialize app -->
+  <!-- Wait for all dependencies to load before running app -->
   <script>
     (function() {
       var maxWait = 15000;
@@ -389,6 +282,7 @@
 
       function checkReady() {
         if (window.React && window.ReactDOM && window.Recharts && window.lucide) {
+          // All deps loaded - setup icons then load app
           setupIcons();
           var s = document.createElement('script');
           s.src = 'app.js';
