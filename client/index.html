@@ -1,26 +1,312 @@
 <!doctype html>
-<html lang="en">
-
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>الرفيق - تتبع العادات</title>    
-    <!-- THIS IS THE START OF A COMMENT BLOCK, BLOCK TO BE DELETED: Google Fonts here, example:
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#0F0B08" />
+    <meta name="description" content="رفيقك في بناء العادات وتشكيل الهوية" />
+    <title>الرفيق - تتبع العادات</title>
+
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+    <link rel="apple-touch-icon" href="/icon-180.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="الرفيق" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    THIS IS THE END OF A COMMENT BLOCK, BLOCK TO BE DELETED -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400;500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" />
+
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #0F0B08;
+        color: #F4E8D0;
+        font-family: 'Tajawal', system-ui, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior-y: contain;
+      }
+      body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #0F0B08;
+        color: #F4E8D0;
+        transition: opacity 0.6s ease;
+        z-index: 9999;
+      }
+      #loading-screen.hide {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .loading-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #D4A24C;
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+      .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+      .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes pulse {
+        0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+        30% { opacity: 1; transform: scale(1.2); }
+      }
+      .loading-text {
+        margin-top: 24px;
+        font-family: 'Reem Kufi', serif;
+        font-weight: 500;
+        font-size: 18px;
+        letter-spacing: 0.05em;
+      }
+      .loading-sub {
+        margin-top: 6px;
+        font-size: 12px;
+        opacity: 0.5;
+      }
+      #error-screen {
+        display: none;
+        position: fixed;
+        inset: 0;
+        padding: 24px;
+        background: #0F0B08;
+        color: #F4E8D0;
+        z-index: 10000;
+        overflow-y: auto;
+        font-family: 'Tajawal', sans-serif;
+      }
+      #error-screen.show { display: block; }
+      #error-screen h2 {
+        font-family: 'Reem Kufi', serif;
+        color: #D4A24C;
+        margin-bottom: 16px;
+      }
+      #error-screen pre {
+        background: #1F1610;
+        color: #F4E8D0;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 11px;
+        overflow-x: auto;
+        direction: ltr;
+        text-align: left;
+      }
+    </style>
   </head>
-
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-    <script
-      defer
-      src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
-  </body>
+    <div id="loading-screen">
+      <div style="display: flex; gap: 8px;">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+      <div class="loading-text">الرفيق</div>
+      <div class="loading-sub">جاري التحضير...</div>
+    </div>
 
+    <div id="root"></div>
+
+    <div id="error-screen">
+      <h2>حدث خطأ</h2>
+      <p style="margin-bottom: 16px;">إذا تكرر هذا الخطأ، أرسل لنا الرسالة التالية:</p>
+      <pre id="error-message"></pre>
+      <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #D4A24C; color: #0F0B08; border: none; border-radius: 12px; font-size: 14px; cursor: pointer;">إعادة التحميل</button>
+    </div>
+
+    <script>
+      window.__showError = function(msg) {
+        try {
+          document.getElementById('loading-screen').style.display = 'none';
+          var es = document.getElementById('error-screen');
+          es.classList.add('show');
+          document.getElementById('error-message').textContent = msg;
+        } catch(e) {}
+      };
+      window.addEventListener('error', function(e) {
+        window.__showError('Error: ' + (e.message || 'unknown') + '\n' + (e.error && e.error.stack ? e.error.stack : ''));
+      });
+
+      window.storage = {
+        async get(key) {
+          try {
+            const value = localStorage.getItem(key);
+            return value !== null ? { value } : null;
+          } catch (e) { return null; }
+        },
+        async set(key, value) {
+          try { localStorage.setItem(key, value); return { value }; }
+          catch (e) { return null; }
+        },
+        async delete(key) {
+          try { localStorage.removeItem(key); return { deleted: true }; }
+          catch (e) { return null; }
+        },
+        async list(prefix) {
+          try {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (!prefix || (k && k.startsWith(prefix))) keys.push(k);
+            }
+            return { keys };
+          } catch (e) { return { keys: [] }; }
+        }
+      };
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+
+      var hideLoading = function() {
+        var ls = document.getElementById('loading-screen');
+        if (ls) {
+          ls.classList.add('hide');
+          setTimeout(function() { try { ls.remove(); } catch(e){} }, 700);
+        }
+      };
+      var observer = new MutationObserver(function() {
+        var root = document.getElementById('root');
+        if (root && root.firstChild) {
+          hideLoading();
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.getElementById('root'), { childList: true, subtree: true });
+      setTimeout(hideLoading, 10000);
+    </script>
+
+    <!-- Wait for all dependencies to load before running app -->
+    <script>
+      (function() {
+        var maxWait = 15000;
+        var startTime = Date.now();
+
+        function setupIcons() {
+          function toKebab(s) {
+            return s.replace(/([a-z])([A-Z0-9])/g, '$1-$2').replace(/([A-Z])([A-Z][a-z])/g, '$1-$2').toLowerCase();
+          }
+
+          function makeLucideIcon(name) {
+            var kebab = toKebab(name);
+            return function LucideIcon(props) {
+              props = props || {};
+              var className = props.className || '';
+              var size = props.size || 24;
+              var style = props.style;
+              var iconsObj = (window.lucide && window.lucide.icons) || {};
+              var iconNode = iconsObj[name] || iconsObj[kebab];
+              if (!iconNode) {
+                return React.createElement('span', {
+                  className: className,
+                  style: Object.assign({ display: 'inline-block', width: size, height: size }, style || {})
+                });
+              }
+              var tag = iconNode[0];
+              var attrs = iconNode[1];
+              var children = iconNode[2] || [];
+
+              var rest = {};
+              for (var k in props) {
+                if (k !== 'className' && k !== 'size' && k !== 'style') rest[k] = props[k];
+              }
+
+              var mergedAttrs = Object.assign({}, attrs, {
+                width: size,
+                height: size,
+                className: className,
+                style: style
+              }, rest);
+
+              var childEls = children.map(function(c, i) {
+                return React.createElement(c[0], Object.assign({ key: i }, c[1]));
+              });
+
+              return React.createElement(tag, mergedAttrs, childEls);
+            };
+          }
+
+          var ICON_NAMES = [
+            'Home', 'Calendar', 'BarChart3', 'Award', 'Settings', 'Plus', 'Flame',
+            'Check', 'Minus', 'Star', 'ChevronRight', 'ChevronLeft', 'X', 'Archive',
+            'Sparkles', 'Compass', 'Hammer', 'Shield', 'Scale', 'Feather', 'Sun', 'Moon',
+            'Coffee', 'Heart', 'Brain', 'BookOpen', 'Dumbbell', 'Target', 'Edit3', 'Trash2',
+            'Pause', 'RotateCcw', 'TrendingUp', 'ArrowRight'
+          ];
+          window.__ICONS__ = {};
+          ICON_NAMES.forEach(function(n) { window.__ICONS__[n] = makeLucideIcon(n); });
+        }
+
+        function checkReady() {
+          if (window.React && window.ReactDOM && window.Recharts && window.lucide) {
+            // All deps loaded - setup icons then load app
+            setupIcons();
+            var s = document.createElement('script');
+            s.src = '/app.js';
+            document.body.appendChild(s);
+            return;
+          }
+          if (Date.now() - startTime > maxWait) {
+            var missing = [];
+            if (!window.React) missing.push('React');
+            if (!window.ReactDOM) missing.push('ReactDOM');
+            if (!window.Recharts) missing.push('Recharts');
+            if (!window.lucide) missing.push('lucide');
+            window.__showError('فشل تحميل المكتبات الخارجية بعد 15 ثانية.\nMissing: ' + missing.join(', ') + '\n\nتأكد من اتصالك بالإنترنت وأعد التحميل.');
+            return;
+          }
+          setTimeout(checkReady, 100);
+        }
+        setTimeout(checkReady, 200);
+      })();
+    </script>
+
+    <!-- CDN dependencies with fallback -->
+    <script>
+      window.__loadScript = function(urls, onLoad, onError) {
+        let i = 0;
+        function tryNext() {
+          if (i >= urls.length) {
+            if (onError) onError();
+            return;
+          }
+          const s = document.createElement('script');
+          s.src = urls[i++];
+          s.async = false;
+          s.onload = function() { if (onLoad) onLoad(); };
+          s.onerror = function() {
+            console.warn('Failed to load:', s.src, '- trying next CDN');
+            tryNext();
+          };
+          document.head.appendChild(s);
+        }
+        tryNext();
+      };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"
+            onerror="window.__loadScript(['https://unpkg.com/react@18.3.1/umd/react.production.min.js','https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js'])"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"
+            onerror="window.__loadScript(['https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js','https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js'])"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js"
+            onerror="window.__loadScript(['https://unpkg.com/prop-types@15.8.1/prop-types.min.js'])"></script>
+    <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"
+            onerror="window.__loadScript(['https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js'])"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.378.0/dist/umd/lucide.min.js"
+            onerror="window.__loadScript(['https://unpkg.com/lucide@0.378.0/dist/umd/lucide.min.js'])"></script>
+
+    <script defer src="%VITE_ANALYTICS_ENDPOINT%/umami" data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+  </body>
 </html>
